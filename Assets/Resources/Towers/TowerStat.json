@@ -1,0 +1,5 @@
+{
+  "Towers": [
+    { "Id": "TOWER_FIRE", "Damage": 50, "Range": 0.8, "AttackCooldown": 1.0 }
+  ]
+}
