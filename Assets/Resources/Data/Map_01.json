@@ -1,0 +1,38 @@
+{
+  "Name": "Map_01",
+  "StartCurrency": 100,
+  "BaseHealth": 20,
+  "Cells": [
+    [4, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 5]
+  ],
+
+  "Lanes": [
+    {
+      "LaneId": 0,
+
+      "Waves": [
+        {
+          "SpawnList": [{ "EnemyId": "E01", "Count": 10, "Interval": 1.8 }]
+        },
+        {
+          "SpawnList": [{ "EnemyId": "E01", "Count": 15, "Interval": 1.6 }]
+        },
+        {
+          "SpawnList": [{ "EnemyId": "E01", "Count": 25, "Interval": 1.4 }]
+        },
+        {
+          "SpawnList": [{ "EnemyId": "E01", "Count": 30, "Interval": 1.2 }]
+        },
+        {
+          "SpawnList": [{ "EnemyId": "E01", "Count": 50, "Interval": 1 }]
+        }
+      ]
+    }
+  ]
+}

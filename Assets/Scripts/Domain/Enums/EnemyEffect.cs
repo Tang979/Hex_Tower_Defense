@@ -4,6 +4,6 @@ namespace Domain.Enums
     {
         Stun,
         Slow,
-        Burn
+        DOT
     }
 }

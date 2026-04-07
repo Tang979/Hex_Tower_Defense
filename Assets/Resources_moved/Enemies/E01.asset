@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20432b8266587f741b8c4a599a8935ed, type: 3}
+  m_Name: E01
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyOS
+  Id: E01
+  prefab: {fileID: 8345397761660855137, guid: 8b0676ebc9dc48e45afbf016a6caf6e0, type: 3}

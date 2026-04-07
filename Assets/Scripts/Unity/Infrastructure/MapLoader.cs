@@ -41,9 +41,10 @@ public static class MapLoader
         return val switch
         {
             1 => HexState.Walkable,
-            2 => HexState.Blocked,
-            3 => HexState.Spawn,
-            4 => HexState.Target,
+            2 => HexState.Tower,
+            3 => HexState.Trap,
+            4 => HexState.Spawn,
+            5 => HexState.Target,
             _ => HexState.None
         };
     }

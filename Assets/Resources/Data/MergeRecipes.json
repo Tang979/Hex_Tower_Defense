@@ -1,0 +1,11 @@
+{
+  "Recipes": [
+    {
+      "RecipeId": "RECIPE_001",
+      "ComponentA_Id": "TOWER_FIRE",
+      "ComponentB_Id": "TOWER_ICE",
+      "ResultTower_Id": "TOWER_FIRE_AND_ICE",
+      "MergeCost": 30
+    }
+  ]
+}

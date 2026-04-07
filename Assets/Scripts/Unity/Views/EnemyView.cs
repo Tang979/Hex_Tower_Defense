@@ -1,48 +1,84 @@
 using System.Collections;
+using System.Linq;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Services;
+using Domain.ValueObject;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EnemyView : MonoBehaviour
 {
-    private Enemy _enemy;
+    public Enemy Enemy { get; private set; }
+    public float Health => Enemy.CurrentHealth;
     private EnemyService _enemyService;
     private LayoutAdapter _layoutAdapter;
 
+    [Header("Movement Settings")]
     public float turnSpeed = 120f;
-    [SerializeField] private Transform headPos;
-    
-    private bool _isKnockingBack = false; // Cờ chặn di chuyển bình thường
 
-    public void Initialize(Enemy enemy, EnemyService enemyService, LayoutAdapter layout)
+    [Header("Animation Sync")]
+    [SerializeField] private Animator animator;
+    [Tooltip("Độ dài sải bước thực tế của model (mét).")]
+    [SerializeField] private float stepDistance = 1.0f;
+
+    [SerializeField] private Transform headPos;
+    [SerializeField] private Transform healthBar;
+    [SerializeField] private Image healthFillImage;
+
+    private bool _isKnockingBack = false;
+
+    [SerializeField] private FloatingHealthBar floatingHealthBar;
+    private GameObject _prefab;
+
+    public void Initialize(Enemy enemy, LayoutAdapter layout, GameObject prefab)
     {
-        _enemy = enemy;
-        _enemyService = enemyService;
+        Enemy = enemy;
+        Enemy.KnockBack += OnKnockBack;
+        Enemy.OnHealthChanged += floatingHealthBar.UpdateHealth;
+        _enemyService = GameController.Instance.EnemyService;
         _layoutAdapter = layout;
-        _enemy.KnockBack += OnKnockBack;
+        _prefab = prefab;
+        healthFillImage.fillAmount = 1f;
+        healthBar.gameObject.SetActive(false);
+        _isKnockingBack = false;
+        transform.position = _layoutAdapter.HexToWorld(Enemy.CurrentTile);
+        transform.LookAt(_layoutAdapter.HexToWorld(Enemy.NextTile));
+
+        ApplyAnimation();
     }
 
-    // --- LOGIC KNOCKBACK MỚI ---
+    private void ApplyAnimation()
+    {
+        if (animator == null || Enemy == null) return;
+
+        if (Enemy.IsStunned || Enemy.IsDead)
+        {
+            animator.SetFloat("Speed", 0);
+            return;
+        }
+
+        float currentMoveSpeed = Enemy.CurrentSpeed; 
+        float scaleFactor = transform.localScale.x;
+        float animSpeed = (currentMoveSpeed / stepDistance) * scaleFactor * Enemy.SpeedModifier;
+
+        animator.SetFloat("Speed", animSpeed);
+    }
+
     private void OnKnockBack()
     {
-        // Nếu đang bay rồi thì thôi
         if (_isKnockingBack) return;
+        _isKnockingBack = true;
 
-        // 1. Xác định đích đến (Tâm của ô hiện tại - CurrentTile)
-        Vector3 targetPos = _layoutAdapter.HexToWorld(_enemy.CurrentTile);
-        // Giữ độ cao Y bằng độ cao hiện tại của Enemy (để tính toán trên mặt phẳng ngang)
+        Vector3 targetPos = _layoutAdapter.HexToWorld(Enemy.CurrentTile);
         targetPos.y = transform.position.y;
 
-        // 2. Bắt đầu quy trình bay giả lập vật lý
         StartCoroutine(SimulateProjectileRoutine(targetPos));
     }
 
     private IEnumerator SimulateProjectileRoutine(Vector3 targetPos)
     {
-
         Vector3 startPos = transform.position;
-        targetPos.y = transform.position.y;
         float dist = Vector3.Distance(startPos, targetPos);
 
         float jumpDuration = Mathf.Clamp(dist / 5f, 0.4f, 0.7f);
@@ -59,53 +95,45 @@ public class EnemyView : MonoBehaviour
             currentPos.y += Mathf.Sin(t * Mathf.PI) * jumpHeight;
 
             transform.position = currentPos;
-
             yield return null;
         }
 
         transform.position = targetPos;
-
         _isKnockingBack = false;
-    }
-
-    void Start()
-    {
-        _enemyService.SpawnEnemy(_enemy, 0);
-        transform.position = _layoutAdapter.HexToWorld(_enemy.CurrentTile);
     }
 
     void Update()
     {
-        _enemyService.UpdateEnemies(Time.deltaTime);
+        if (Enemy == null) return;
 
-        // CHỈNH SỬA: Nếu đang bị Knockback thì KHÔNG chạy logic di chuyển thường
-        if (_isKnockingBack || _enemy.IsStunned)
+        if (Enemy.IsDead)
+        {
+            _enemyService.EnemyDie(Enemy);
+            ReturnToPool();
             return;
+        }
         else
-            Move();
+        {
+            Enemy.Position = new Position(transform.position.x, transform.position.z);
+            Enemy.HeadInNextTile = HeadInNextTile();
+        }
+        ApplyAnimation();
 
-        if (HeadInNextTile())
-            _enemy.HeadInNextTile = true;
-        else
-            _enemy.HeadInNextTile = false;
-    }
-
-    void OnDestroy()
-    {
-        _enemy.KnockBack -= OnKnockBack;
+        if (_isKnockingBack || Enemy.IsStunned)
+            return;
+        
+        Move();
     }
 
     public void Move()
     {
+        if (Enemy.NextTile == null) return;
 
-        if (_enemy.NextTile == null)
-        {
-            Debug.Log("Enemy has reached the end of the path.");
-            return;
-        }
-        var targetPos = _layoutAdapter.HexToWorld(_enemy.NextTile);
+        var targetPos = _layoutAdapter.HexToWorld(Enemy.NextTile);
         targetPos.y = transform.position.y;
-        transform.position = Vector3.MoveTowards(transform.position, targetPos, _enemy.CurrentSpeed * Time.deltaTime);
+        
+        transform.position = Vector3.MoveTowards(transform.position, targetPos, Enemy.CurrentSpeed * Time.deltaTime);
+        
         Vector3 direction = targetPos - transform.position;
         if (direction != Vector3.zero)
         {
@@ -116,26 +144,40 @@ public class EnemyView : MonoBehaviour
 
         if (Vector3.Distance(transform.position, targetPos) < 0.01f)
         {
-            if (_enemy.NextTile.State == HexState.Target)
+            Enemy.MoveNexTile();
+            if (Enemy.CurrentTile.State == HexState.Target)
             {
-                _enemyService.EnemyDie(_enemy);
-                _enemy.ResetEnemy();
-                _enemyService.SpawnEnemy(_enemy, 0);
-                transform.position = _layoutAdapter.HexToWorld(_enemy.CurrentTile);
-                transform.LookAt(_layoutAdapter.HexToWorld(_enemy.NextTile));
+                _enemyService.EnemyDie(Enemy);
+                ReturnToPool();
                 return;
             }
-            _enemy.MoveNexTile();
         }
     }
 
     public bool HeadInNextTile()
     {
+        if (headPos == null || Enemy.NextTile == null) return false;
         var tileCheck = _layoutAdapter.WorldToHexCoords(headPos.position);
-        if (tileCheck.q < 0 || tileCheck.r < 0)
-            return false;
-        if (tileCheck.q == _enemy.NextTile.Q && tileCheck.r == _enemy.NextTile.R)
-            return true;
-        return false;
+        return tileCheck.q == Enemy.NextTile.Q && tileCheck.r == Enemy.NextTile.R;
+    }
+
+    private void ReturnToPool()
+    {
+        if (GameController.Instance != null && GameController.Instance.EnemyRegistry != null)
+        {
+            if (Enemy != null)
+                GameController.Instance.EnemyRegistry.Remove(Enemy);
+        }
+        Enemy = null;
+        GameController.Instance.PoolManager.ReturnPool(_prefab, gameObject);
+    }
+
+    private void OnDisable()
+    {
+        if (Enemy != null)
+        {
+            Enemy.KnockBack -= OnKnockBack;
+            Enemy.OnHealthChanged -= floatingHealthBar.UpdateHealth;
+        }
     }
 }

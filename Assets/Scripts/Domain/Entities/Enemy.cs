@@ -7,17 +7,16 @@ namespace Domain.Entities
 {
     public class Enemy
     {
-        // 1. Định danh
         public string Id { get; }
 
-        // 2. Chỉ số
         public float MaxHealth { get; private set; }
         public float CurrentHealth { get; private set; }
-        public float BaseSpeed { get; }
+        public float BaseSpeed { get; private set;}
         public float SpeedModifier { get; private set; } = 1f;
-        public float CurrentSpeed => BaseSpeed * SpeedModifier; // Tốc độ thực tế
+        public float CurrentSpeed => BaseSpeed * SpeedModifier;
+        public int Reward { get; private set; }
 
-        // 3. Vị trí & Map Logic (Quan trọng cho Hybrid 1.5)
+        public Position Position { get; set; }
         public int CurrentLaneId { get; set; }
         public List<HexTile> CurrentPath { get; private set; }
         private int PathIndex = 0;
@@ -25,36 +24,25 @@ namespace Domain.Entities
         public HexTile NextTile { get; private set; }
         public bool HeadInNextTile { get; set; } = false;
 
-        // 4. Trạng thái & Hiệu ứng
         public EnemyState CurrentState { get; private set; } // Chỉ 1 trạng thái tại 1 thời điểm
-        private List<ActiveEffect> _activeEffects;
+        public List<ActiveEffect> _activeEffects;
         private List<ActiveEffect> _deleteEffects;
         public event Action KnockBack;
+        public event Action<float, float> OnHealthChanged;
 
         public bool IsDead => CurrentHealth <= 0;
         public bool IsStunned = false;
 
-        public Enemy(string id, float health, float speed)
+        public Enemy(string id, float health, float speed, int reward)
         {
             Id = id;
             MaxHealth = health;
+            CurrentHealth = health;
             BaseSpeed = speed;
+            Reward = reward;
             _activeEffects = new List<ActiveEffect>();
             _deleteEffects = new List<ActiveEffect>();
 
-            // Chưa active ngay, đợi Reset/Spawn mới active
-            CurrentState = EnemyState.Spawning;
-        }
-
-        public Enemy()
-        {
-            Id = "Enemy_01";
-            MaxHealth = 100f;
-            BaseSpeed = 1f;
-            _activeEffects = new List<ActiveEffect>();
-            _deleteEffects = new List<ActiveEffect>();
-
-            // Chưa active ngay, đợi Reset/Spawn mới active
             CurrentState = EnemyState.Spawning;
         }
 
@@ -66,6 +54,16 @@ namespace Domain.Entities
             CurrentTile.EnemyCount++;
             NextTile = path[1];
             CurrentState = EnemyState.Moving;
+        }
+
+        public void SetHealth(float health)
+        {
+            CurrentHealth = health;
+        }
+
+        public void SetSpeed(float speed)
+        {
+            BaseSpeed = speed;
         }
 
         public void MoveNexTile()
@@ -89,17 +87,14 @@ namespace Domain.Entities
         {
             CurrentPath = newPath;
             PathIndex = 0;
-            // Luôn an toàn khi lấy phần tử đầu tiên (vì path != null)
             CurrentTile = newPath[0];
 
-            // Kiểm tra an toàn trước khi lấy phần tử thứ 2
             if (newPath.Count > 1)
             {
                 NextTile = newPath[1];
             }
             else
             {
-                // Nếu path chỉ có 1 điểm (đang đứng tại đích), NextTile là null hoặc chính là đích
                 NextTile = null;
             }
 
@@ -107,20 +102,21 @@ namespace Domain.Entities
 
         public void Tick(float deltaTime)
         {
-
             if (_activeEffects.Count > 0)
             {
                 foreach (var effect in _activeEffects)
                 {
-                    effect.Update(deltaTime);
-                    if (effect.RemainingTime <= 0)
+                    bool shouldTriggerTick = effect.UpdateTick(deltaTime);
+
+                    if (shouldTriggerTick)
                     {
-                        // Xoá hiệu ứng hết hạn
-                        _deleteEffects.Add(effect);
+                        effect.ApplyTickEffect(this);
                     }
+
+                    if (effect.RemainingTime <= 0)
+                        _deleteEffects.Add(effect);
                 }
             }
-
             RemoveEffect();
         }
 
@@ -130,7 +126,6 @@ namespace Domain.Entities
             {
                 if (existingEffect.SourceId == effect.SourceId && existingEffect.EffectType == effect.EffectType)
                 {
-                    // Cập nhật lại thời gian và sức mạnh nếu đã tồn tại hiệu ứng cùng loại từ cùng nguồn
                     existingEffect.SetRemainingTime(effect.RemainingTime);
                     return;
                 }
@@ -159,10 +154,9 @@ namespace Domain.Entities
 
             foreach (var effect in _activeEffects)
             {
-                if (effect.EffectType == EnemyEffect.Stun)
-                    IsStunned = true;
-                if (effect.EffectType == EnemyEffect.Slow)
-                    SpeedModifier -= effect.Power;
+                IsStunned |= effect.IsStunning(); 
+                
+                SpeedModifier -= effect.GetSpeedReduction();
             }
 
             if (IsStunned)
@@ -177,6 +171,7 @@ namespace Domain.Entities
         public void TakeDamage(float amount)
         {
             CurrentHealth -= amount;
+            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
         }
 
         public void ResetEnemy()
@@ -184,6 +179,7 @@ namespace Domain.Entities
             CurrentHealth = MaxHealth;
             HeadInNextTile = false;
             SpeedModifier = 1f;
+            Reward = 0;
             CurrentState = EnemyState.Spawning;
             CurrentPath = null;
             PathIndex = 0;

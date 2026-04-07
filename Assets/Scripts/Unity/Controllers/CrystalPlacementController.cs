@@ -1,32 +1,48 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Domain.Entities;
 using Domain.Core.Data;
+using Domain.Enums;
+using Domain.Interface;
+using Domain.Services.Combat.Modifier;
+using Domain.Services.Combat.Strategy; // Thêm thư viện chứa IAttackModifier
 
 public class CrystalPlacementController : MonoBehaviour
 {
-    [SerializeField] private GameController _game;
     [SerializeField] private Camera _cam;
     [SerializeField] private LayoutAdapter _layoutAdapter;
 
     private Ray ray;
     private Plane plane = new Plane(Vector3.up, Vector3.zero);
 
-    [Header("Team Loadout (Visuals)")]
-    [SerializeField] private List<TowerOS> _teamTowers; // Loadout lấy từ ScriptableObject
+    [Header("Team Loadout (Visuals Only)")]
+    private List<TowerOS> _teamTowers;
 
-    private Dictionary<string, TowerStatData> _towerStatsDict; // Dữ liệu cân bằng lấy từ JSON
-
+    private Dictionary<string, TowerStatData> _towerStatsDict;
     private TowerOS _currentSelectedTowerOS;
     private GameObject _currentGhost;
     private bool _isDragging = false;
+    public bool IsMapDragging { get; private set; }
+    private TowerView _originTowerView;
     private InputService _inputService;
+
+    // [THÊM MỚI] Nhà máy đúc Modifier
+    private Dictionary<string, Func<IAttackModifier>> _modifierFactory;
 
     public void Initialize(InputService inputService, Dictionary<string, TowerStatData> statsDict, List<TowerOS> teamTowers)
     {
         _inputService = inputService;
-        _towerStatsDict = statsDict; // Nhận dữ liệu JSON từ GameController
-        _teamTowers = teamTowers;   // Nhận loadout từ GameController
+        _towerStatsDict = statsDict;
+        _teamTowers = teamTowers;
+
+        _modifierFactory = new Dictionary<string, Func<IAttackModifier>>
+        {
+            { "SplashModifier", () => new SplashModifier() },
+            { "StatusEffectModifier", () => new StatusEffectModifier() },
+            { "ChainModifier", () => new ChainModifier() },
+            { "AlternatingEffectModifier", () => new AlternatingEffectModifier() }
+        };
     }
 
     void Update()
@@ -37,28 +53,56 @@ public class CrystalPlacementController : MonoBehaviour
         }
     }
 
-    // Nút UI sẽ gọi hàm này và truyền vào Id của TowerOS
     public void StartDragging(string towerId)
     {
+        if (Time.timeScale == 0f) return;
+
         _currentSelectedTowerOS = _teamTowers.Find(t => t.Id == towerId);
 
-        Debug.Log($"Start dragging tower: {_currentSelectedTowerOS?.ghostPrefab} with ID: {towerId}");
         if (_currentSelectedTowerOS != null && _currentSelectedTowerOS.ghostPrefab != null)
         {
             _currentGhost = Instantiate(_currentSelectedTowerOS.ghostPrefab);
             _isDragging = true;
+            IsMapDragging = false;
+            _originTowerView = null;
 
-            // Đảm bảo Ghost không block raycast
             var colliders = _currentGhost.GetComponentsInChildren<Collider>();
-            foreach(var col in colliders) col.enabled = false;
+            foreach (var col in colliders) col.enabled = false;
 
-            Vector2 screenPos = _inputService.GetPointerPosition();
-            ray = _cam.ScreenPointToRay(screenPos);
+            GameController.Instance.CameraController.SetDragEnabled(false);
+            MoveGhostToMouse();
+        }
+    }
 
-            if (plane.Raycast(ray, out float dist))
-            {
-                _currentGhost.transform.position = ray.GetPoint(dist);
-            }
+    public void StartMapDragging(TowerView originTower)
+    {
+        if (Time.timeScale == 0f || originTower == null) return;
+        
+        _currentSelectedTowerOS = _teamTowers.Find(t => t.Id == originTower.Tower.Id);
+        
+        if (_currentSelectedTowerOS != null && _currentSelectedTowerOS.ghostPrefab != null)
+        {
+            _originTowerView = originTower;
+            _currentGhost = Instantiate(_currentSelectedTowerOS.ghostPrefab);
+            _isDragging = true;
+            IsMapDragging = true;
+            
+            var colliders = _currentGhost.GetComponentsInChildren<Collider>();
+            foreach (var col in colliders) col.enabled = false;
+
+            GameController.Instance.CameraController.SetDragEnabled(false);
+            MoveGhostToMouse();
+        }
+    }
+
+    private void MoveGhostToMouse()
+    {
+        Vector2 screenPos = _inputService.GetPointerPosition();
+        ray = _cam.ScreenPointToRay(screenPos);
+
+        if (plane.Raycast(ray, out float dist))
+        {
+            _currentGhost.transform.position = ray.GetPoint(dist);
         }
     }
 
@@ -73,13 +117,24 @@ public class CrystalPlacementController : MonoBehaviour
             _currentGhost.transform.position = worldPos;
 
             var (q, r) = _layoutAdapter.WorldToHexCoords(worldPos);
-            var tile = _game.Map.GetTile(q, r);
+            var tile = GameController.Instance.Map.GetTile(q, r);
 
             if (tile != null)
             {
                 _currentGhost.transform.position = _layoutAdapter.HexToWorld(tile);
             }
         }
+    }
+
+    public void EndMapDraggingCancel()
+    {
+        if (_currentGhost != null) Destroy(_currentGhost);
+        _currentGhost = null;
+        _currentSelectedTowerOS = null;
+        _isDragging = false;
+        IsMapDragging = false;
+        _originTowerView = null;
+        GameController.Instance.CameraController.SetDragEnabled(true);
     }
 
     public void EndDragging()
@@ -89,74 +144,186 @@ public class CrystalPlacementController : MonoBehaviour
 
         if (TryPlaceCrystal())
         {
-            // Build thành công -> Bỏ ghost
-            Destroy(_currentGhost); 
-            _currentGhost = null;
+            Destroy(_currentGhost);
         }
         else
         {
-            // Build thất bại -> Hủy ghost
             Destroy(_currentGhost);
-            _currentGhost = null;
         }
+        _currentGhost = null;
         _currentSelectedTowerOS = null;
+        IsMapDragging = false;
+        _originTowerView = null;
+        GameController.Instance.CameraController.SetDragEnabled(true);
     }
 
     private bool TryPlaceCrystal()
     {
         if (_currentSelectedTowerOS == null) return false;
 
+        if (!_towerStatsDict.TryGetValue(_currentSelectedTowerOS.Id, out TowerStatData stats))
+        {
+            Debug.LogError($"Thiếu dữ liệu JSON cho Tower ID: {_currentSelectedTowerOS.Id}");
+            return false;
+        }
+
+        if (!GameController.Instance.CurrencyService.CanAfford(stats.Cost))
+        {
+            Debug.Log($"Không đủ tiền!");
+            return false;
+        }
+
         Vector3 worldPos = _currentGhost.transform.position;
         var (q, r) = _layoutAdapter.WorldToHexCoords(worldPos);
-        if (q < 0 || r < 0) return false;
-        
-        var tile = _game.Map.GetTile(q, r);
+        var tile = GameController.Instance.Map.GetTile(q, r);
+
         if (tile == null) return false;
 
-        // 1. Dùng Domain kiểm tra có đặt được không (Không bị Deadlock)
-        int currentEnemyCount = _game.EnemyService.ActiveEnemies.Count;
-        bool success = _game.PlacementService.TryPlaceCrystal(tile, currentEnemyCount);
+        TowerView targetTower = GameController.Instance.GetTowerAt(tile);
+        if (targetTower != null && targetTower != _originTowerView)
+        {
+            return TryMergeTowers(targetTower);
+        }
+
+        if (IsMapDragging) 
+        {
+            return false;
+        }
+
+        int currentEnemyCount = GameController.Instance.EnemyService.ActiveEnemies.Count;
+        bool success = GameController.Instance.PlacementService.TryPlaceCrystal(tile, currentEnemyCount, stats.IsTrap);
 
         if (success)
         {
-            // --- HYBRID DATA IN ACTION ---
-            
-            // 2. Lấy dữ liệu Logic từ JSON Dictionary
-            if (!_towerStatsDict.TryGetValue(_currentSelectedTowerOS.Id, out TowerStatData stats))
-            {
-                Debug.LogError($"Thiếu dữ liệu JSON cân bằng cho Tower ID: {_currentSelectedTowerOS.Id}");
-                return false;
-            }
-
-            // 3. Khởi tạo Domain Entity (Thuần C#) với dữ liệu JSON
-            Tower domainTower = new Tower(
-                _currentSelectedTowerOS.Id, 
-                _currentSelectedTowerOS.towerName, 
-                stats.Range, 
-                stats.Damage, 
-                stats.AttackCooldown, 
-                _currentSelectedTowerOS.targetPriority
-            );
-
-            // Gắn Strategy cho Tower (dựa trên AttackType trong SO)
-            // Tạm thời giả sử bạn có class Factory, hoặc map cứng ở đây:
-            // domainTower.SetAttackStrategy(new ProjectileAttackStrategy()); 
-
-            // 4. Khởi tạo Unity View (Prefab)
-            GameObject towerObject = Instantiate(_currentSelectedTowerOS.towerPrefab, _layoutAdapter.HexToWorld(tile), Quaternion.identity);
-            
-            // 5. Kết nối View với Domain
-            TowerView towerView = towerObject.GetComponent<TowerView>();
-            if (towerView != null)
-            {
-                towerView.Initialize(domainTower);
-            }
-
-            // 6. Thông báo Map thay đổi
-            _game.OnMapChanged(); 
+            GameController.Instance.CurrencyService.SpendCurrency(stats.Cost);
+            SpawnTowerAtTile(tile, stats, _currentSelectedTowerOS);
             return true;
         }
 
         return false;
+    }
+
+    private bool TryMergeTowers(TowerView targetTower)
+    {
+        if (_currentSelectedTowerOS == null || targetTower == null) return false;
+        
+        string dragTowerId = _currentSelectedTowerOS.Id;
+        string targetTowerId = targetTower.Tower.Id;
+        
+        var recipe = GameController.Instance.ValidMergeRecipes.Find(r => 
+            (r.ComponentA_Id == dragTowerId && r.ComponentB_Id == targetTowerId) ||
+            (r.ComponentA_Id == targetTowerId && r.ComponentB_Id == dragTowerId)
+        );
+        
+        if (recipe == null) return false;
+        
+        int totalCost = recipe.MergeCost;
+        if (!IsMapDragging)
+        {
+            if (_towerStatsDict.TryGetValue(dragTowerId, out TowerStatData dragStats))
+            {
+                totalCost += dragStats.Cost;
+            }
+        }
+
+        if (!GameController.Instance.CurrencyService.CanAfford(totalCost))
+        {
+            Debug.Log($"Không đủ tiền ghép tháp! Cần {totalCost}");
+            return false; 
+        }
+        
+        if (!_towerStatsDict.TryGetValue(recipe.ResultTower_Id, out TowerStatData resultStats))
+        {
+            Debug.LogError($"Thiếu dữ liệu JSON cho tháp kết quả: {recipe.ResultTower_Id}");
+            return false;
+        }
+        
+        TowerOS resultTowerOS = _teamTowers.Find(t => t.Id == recipe.ResultTower_Id);
+        if (resultTowerOS == null)
+        {
+            resultTowerOS = ResourceManager.GetTowerOS(recipe.ResultTower_Id);
+            if (resultTowerOS == null) return false;
+        }
+
+        GameController.Instance.CurrencyService.SpendCurrency(totalCost);
+        
+        HexTile targetTile = targetTower.CurrentTile;
+        GameController.Instance.DestroyTowerViewSilently(targetTower);
+        
+        if (IsMapDragging && _originTowerView != null)
+        {
+            GameController.Instance.DestroyTowerViewSilently(_originTowerView);
+        }
+        
+        bool success = GameController.Instance.PlacementService.TryPlaceCrystal(targetTile, GameController.Instance.EnemyService.ActiveEnemies.Count, resultStats.IsTrap);
+        if (success)
+        {
+            SpawnTowerAtTile(targetTile, resultStats, resultTowerOS);
+        }
+        return true;
+    }
+
+    private void SpawnTowerAtTile(HexTile tile, TowerStatData stats, TowerOS towerOS)
+    {
+        Tower domainTower = new Tower(
+            stats.Id,
+            towerOS.towerName,
+            stats.Range,
+            stats.Damage,
+            stats.AttackCooldown,
+            stats.AttackType,
+            stats.TargetPriority,
+            stats.Effects,
+            stats.IsTrap
+        );
+
+        AssignAttackStrategy(domainTower, stats.AttackType, stats);
+
+        GameObject towerObject = GameController.Instance.PoolManager.GetObject(towerOS.towerPrefab);
+        towerObject.transform.position = _layoutAdapter.HexToWorld(tile);
+        towerObject.transform.rotation = Quaternion.identity;
+
+        TowerView towerView = towerObject.GetComponent<TowerView>();
+        if (towerView != null)
+        {
+            towerView.Initialize(domainTower, towerOS.bulletPrefab, tile, towerOS.towerPrefab);
+            GameController.Instance.RegisterTower(tile, towerView);
+        }
+        towerObject.SetActive(true);
+        GameController.Instance.OnMapChanged();
+    }
+
+    private void AssignAttackStrategy(Tower tower, AttackType type, TowerStatData stats)
+    {
+        List<IAttackModifier> activeModifiers = new List<IAttackModifier>();
+
+        if (stats.Modifiers != null)
+        {
+            foreach (ModifierConfig config in stats.Modifiers)
+            {
+                if (_modifierFactory.TryGetValue(config.ModifierName, out var createModifier))
+                {
+                    IAttackModifier newModifier = createModifier();
+                    newModifier.Initialize(config);
+                    activeModifiers.Add(newModifier);
+                }
+            }
+        }
+
+        switch (type)
+        {
+            case AttackType.Projectile:
+                tower.SetAttackStrategy(new ProjectileAttackStrategy(activeModifiers, GameController.Instance.EnemyService));
+                break;
+            case AttackType.AoE:
+                tower.SetAttackStrategy(new AoEAttackStrategy(activeModifiers));
+                break;
+            case AttackType.Instant:
+                tower.SetAttackStrategy(new InstantAttackStrategy(activeModifiers, GameController.Instance.EnemyService));
+                break;
+            default:
+                tower.SetAttackStrategy(new ProjectileAttackStrategy(activeModifiers, GameController.Instance.EnemyService));
+                break;
+        }
     }
 }

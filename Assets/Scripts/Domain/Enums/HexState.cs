@@ -4,7 +4,8 @@ namespace Domain.Enums
     {
         None,
         Walkable,
-        Blocked, // Đổi Tower thành Blocked để tổng quát hơn
+        Tower,
+        Trap,
         Spawn,
         Target
     }

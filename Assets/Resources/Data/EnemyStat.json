@@ -1,0 +1,16 @@
+{
+  "Enemies": [
+    {
+      "Id": "E01",
+      "MaxHealth": 150.0,
+      "Reward": 10,
+      "BaseSpeed": 1
+    },
+    {
+      "Id": "E02",
+      "MaxHealth": 300.0,
+      "Reward": 25,
+      "BaseSpeed": 0.8
+    }
+  ]
+}

@@ -48,15 +48,12 @@ namespace Domain.Services.Pathfinding
                         neighbor.searchId = _currentSearchId;
                     }
 
-                    // int newMovementCostToNeighbor = current.G + 1;
                     float newMovementCostToNeighbor = current.G + 1f;
                     if (newMovementCostToNeighbor < neighbor.G)
                     {
                         neighbor.G = newMovementCostToNeighbor;
-                        // neighbor.H = GetDistance(neighbor, end);
                         neighbor.H = GetHeuristicWithTieBreaker(neighbor, start, end);
                         neighbor.Parent = current;
-                        // int cost = neighbor.G + neighbor.H;
                         float priority = neighbor.G + neighbor.H;
                         _openSet.Enqueue(neighbor, priority);
 
@@ -67,7 +64,7 @@ namespace Domain.Services.Pathfinding
                     }
                 }
             }
-            return null; // No path
+            return null;
         }
 
         private List<HexTile> RetracePath(HexTile start, HexTile end)
@@ -83,34 +80,17 @@ namespace Domain.Services.Pathfinding
             path.Reverse();
             return path;
         }
-
-        // Trong class AStarPathfinder của bạn
-
-        // Thay vì dùng hàm GetDistance cũ cho H, hãy dùng hàm này:
         private float GetHeuristicWithTieBreaker(HexTile node, HexTile start, HexTile end)
         {
-            // 1. Tính H chuẩn (Khoảng cách Hex)
-            // Lưu ý: Phải cast sang float
             float h = (Math.Abs(node.Q - end.Q) + Math.Abs(node.R - end.R) + Math.Abs(node.S - end.S)) / 2f;
 
-            // 2. Tính "Độ lệch" khỏi đường thẳng (Cross Product)
-            // Ta coi tọa độ Hex (Q, R) như tọa độ 2D để tính tích chéo.
-
-            // Vector từ Start -> End
             float dx1 = end.Q - start.Q;
             float dy1 = end.R - start.R;
 
-            // Vector từ Start -> Node hiện tại
             float dx2 = node.Q - start.Q;
             float dy2 = node.R - start.R;
 
-            // Tích chéo (Cross Product) cho biết độ lệch hướng
-            // Giá trị này càng lớn -> Node càng lệch khỏi đường thẳng nối Start-End
             float crossProduct = Math.Abs(dx1 * dy2 - dx2 * dy1);
-
-            // 3. Cộng điểm phạt (Nudge)
-            // Cộng thêm một lượng siêu nhỏ (0.001) dựa trên độ lệch.
-            // Node nào nằm đúng trên đường thẳng sẽ có crossProduct = 0 -> H nhỏ nhất -> Được ưu tiên chọn.
             return h + (crossProduct * 0.001f);
         }
     }

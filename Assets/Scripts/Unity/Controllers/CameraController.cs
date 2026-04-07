@@ -12,6 +12,13 @@ public sealed class CameraController : MonoBehaviour
     private InputService inputService;
 
     private bool isDragging = false;
+    public bool CanDragMap { get; private set; } = true;
+
+    public void SetDragEnabled(bool enabled)
+    {
+        CanDragMap = enabled;
+        if (!enabled) isDragging = false;
+    }
 
     private void Awake()
     {
@@ -42,7 +49,7 @@ public sealed class CameraController : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!isDragging) return;
+        if (!isDragging || !CanDragMap) return;
 
         Vector2 delta = inputService.GetPanDelta();
         if (delta == Vector2.zero) return;

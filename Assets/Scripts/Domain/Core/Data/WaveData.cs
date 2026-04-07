@@ -5,8 +5,7 @@ namespace Domain.Core.Data
     [System.Serializable]
     public class WaveData
     {
-        public string WaveId;
-        public const float DelayBeforeStart = 2f;
+        public const float DelayBeforeStart = 5f;
         public List<EnemyWaveData> SpawnList;
     }
 }

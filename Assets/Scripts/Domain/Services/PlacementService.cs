@@ -36,32 +36,45 @@ namespace Domain.Services
             return true;
         }
 
-        public bool TryPlaceCrystal(HexTile tile, int totalActiveEnemies)
+        public bool TryPlaceCrystal(HexTile tile, int totalActiveEnemies, bool isTrap)
         {
             if (!tile.IsWalkable() || tile.State == HexState.Spawn || tile.State == HexState.Target) return false;
 
-            if (tile.EnemyCount > 0) return false;
+            if (tile.EnemyCount > 0 && !isTrap) return false;
 
-            // 1. Giả lập chặn đường
+            if(isTrap)
+            {
+                tile.SetState(HexState.Trap);
+                return true;
+            }
+
             var originalState = tile.State;
-            tile.SetState(HexState.Blocked);
+            tile.SetState(HexState.Tower);
 
-            // 2. Kiểm tra deadlock (tất cả spawn phải đến được đích)
             var tempPath = new Dictionary<int, List<HexTile>>();
             var canPlace = CheckPlace(tempPath);
 
-            // 3. Nếu thất bại, hoàn tác
             if (!canPlace || !CheckDeadlockEnemy(totalActiveEnemies))
             {
                 tile.SetState(originalState);
                 return false;
             }
 
-            // 4. Nếu thành công, giữ nguyên trạng thái (hoặc Unity sẽ confirm sau)
             _laneService.UpdatePath(tempPath);
             OnMapChanged?.Invoke(tile);
-            // Ở đây ta giữ nguyên Logic là đã thay đổi state
             return true;
+        }
+
+        public void RemoveCrystal(HexTile tile)
+        {
+            if (tile != null && tile.State == HexState.Tower)
+            {
+                tile.SetState(HexState.Walkable);
+                
+                _laneService.RecalculateAllPaths();
+                
+                OnMapChanged?.Invoke(tile);
+            }
         }
 
         private bool CheckDeadlockEnemy(int totalActiveEnemies)

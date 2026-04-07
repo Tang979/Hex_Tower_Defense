@@ -30,7 +30,7 @@ namespace Domain.Entities
 
         public bool IsWalkable()
         {
-            return State == HexState.Walkable || State == HexState.Spawn || State == HexState.Target;
+            return State == HexState.Walkable || State == HexState.Spawn || State == HexState.Target || State == HexState.Trap;
         }
     }
 }

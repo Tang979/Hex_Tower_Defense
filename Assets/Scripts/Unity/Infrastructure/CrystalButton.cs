@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,14 +10,21 @@ public class CrystalButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     [SerializeField] private CrystalPlacementController _placementController;
     [SerializeField] private Image _buttonImage; // Kéo component Image của nút vào đây
+    [SerializeField] private TextMeshProUGUI _costText;
 
     // Hàm này sẽ được gọi bởi hệ thống UI/GameController lúc khởi tạo game
-    public void SetupButton(TowerOS towerData, CrystalPlacementController controller)
+    public void SetupButton(TowerOS towerData, int cost, CrystalPlacementController controller)
     {
-        _towerId = towerData.Id;                   // Tự động nhận ID
+        _towerId = towerData.Id;
         if (towerData.towerIcon != null)
-            _buttonImage.sprite = towerData.towerIcon; // Tự động đổi hình ảnh icon
+            _buttonImage.sprite = towerData.towerIcon;
+            
         _placementController = controller;
+
+        if (_costText != null)
+        {
+            _costText.text = cost.ToString();
+        }
     }
 
     public void OnPointerDown(PointerEventData eventData)
