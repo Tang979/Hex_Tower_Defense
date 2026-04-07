@@ -6,6 +6,9 @@ A strategic tower defense game built with **Unity** featuring hexagonal grid-bas
 ![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-brightgreen)
 ![Language](https://img.shields.io/badge/Language-C%23%2010-blue)
 
+## 📥 Download Demo
+You can download the latest playable APK [HERE]([link-đến-bản-release-của-bạn](https://github.com/Tang979/Aetheric_Mobile/releases/tag/v1.0.0))
+
 ---
 
 ## 📋 Table of Contents
