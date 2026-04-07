@@ -1,0 +1,155 @@
+{
+  "Towers": [
+    {
+      "Id": "TOWER_FIRE",
+      "Damage": 20,
+      "Range": 2,
+      "AttackCooldown": 5,
+      "Cost": 25,
+      "AttackType": "Projectile",
+      "TargetPriority": "First",
+      "IsTrap": false,
+      "Modifiers": [
+        {
+          "ModifierName": "StatusEffectModifier"
+        }
+      ],
+      "Effects": [
+        {
+          "effectType": "DOT",
+          "scalingType": "PercentageEnemyMaxHealth",
+          "power": 0.1,
+          "duration": 2,
+          "tickInterval": 0.25
+        }
+      ]
+    },
+    {
+      "Id": "TOWER_ICE",
+      "Damage": 15,
+      "Range": 2,
+      "AttackCooldown": 5,
+      "Cost": 25,
+      "Modifiers": [
+        {
+          "ModifierName": "StatusEffectModifier"
+        }
+      ],
+      "Effects": [
+        {
+          "effectType": "Slow",
+          "scalingType": "Flat",
+          "power": 0.4,
+          "duration": 3,
+          "tickInterval": 0
+        }
+      ]
+    },
+    {
+      "Id": "TOWER_POISON",
+      "Damage": 15,
+      "Range": 2,
+      "AttackCooldown": 0.75,
+      "Cost": 20,
+      "AttackType": "AoE",
+      "IsTrap": true,
+      "Modifiers": [
+        {
+          "ModifierName": "StatusEffectModifier"
+        }
+      ],
+      "Effects": [
+        {
+          "effectType": "DOT",
+          "scalingType": "Flat",
+          "power": 10,
+          "duration": 1.5,
+          "tickInterval": 0.25
+        }
+      ]
+    },
+    {
+      "Id": "TOWER_LIGHTNING",
+      "Damage": 5,
+      "Range": 2,
+      "AttackCooldown": 0.15,
+      "Cost": 20,
+      "AttackType": "Instant",
+      "TargetPriority": "First",
+      "IsTrap": false,
+      "Modifiers": [
+        {
+          "ModifierName": "StatusEffectModifier"
+        },
+        {
+          "ModifierName": "ChainModifier",
+          "Args": {
+            "maxBounces": 2,
+            "bounceRadius": 3,
+            "damageMultiplier": 0.8
+          }
+        }
+      ],
+      "Effects": []
+    },
+    {
+      "Id": "TOWER_ROCK",
+      "Damage": 40,
+      "Range": 2,
+      "AttackCooldown": 1.5,
+      "Cost": 30,
+      "AttackType": "Projectile",
+      "TargetPriority": "First",
+      "IsTrap": false,
+      "Modifiers": [
+        {
+          "ModifierName": "StatusEffectModifier"
+        },
+        {
+          "ModifierName": "SplashModifier",
+          "Args": {
+            "chance": 1,
+            "radius": 1,
+            "damageRatio": 0.5
+          }
+        }
+      ],
+      "Effects": []
+    },
+    {
+      "Id": "TOWER_FIRE_AND_ICE",
+      "Damage": 30,
+      "Range": 2,
+      "AttackCooldown": 1,
+      "Cost": 35,
+      "AttackType": "Projectile",
+      "TargetPriority": "Strongest",
+      "IsTrap": false,
+      "Modifiers": [
+        {
+          "ModifierName": "AlternatingEffectModifier",
+          "StringArgs": {
+            "Visual0": "Bullet_Fire",
+            "Visual1": "Bullet_Ice"
+          }
+        }
+      ],
+      "Effects": [
+        {
+          "effectType": "DOT",
+          "scalingType": "PercentageEnemyMaxHealth",
+          "power": 0.4,
+          "duration": 2,
+          "tickInterval": 0.25
+        },
+        {
+          "effectType": "Slow",
+          "scalingType": "Flat",
+          "power": 0.3,
+          "duration": 3,
+          "tickInterval": 0
+        }
+      ]
+    }
+  ]
+}

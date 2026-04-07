@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64e5d255abd57d4cb12558cea6657a9, type: 3}
+  m_Name: TOWER_FIRE_AND_ICE
+  m_EditorClassIdentifier: Assembly-CSharp::TowerOS
+  Id: TOWER_FIRE_AND_ICE
+  towerName: Fire And Ice
+  towerPrefab: {fileID: 239818858001957333, guid: 6540dfc03461b0043a7568772e1bd987, type: 3}
+  ghostPrefab: {fileID: 239818858001957333, guid: 6540dfc03461b0043a7568772e1bd987, type: 3}
+  towerIcon: {fileID: 0}
+  bulletPrefab: {fileID: 0}

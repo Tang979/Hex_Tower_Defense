@@ -1,0 +1,6 @@
+﻿<Solution>
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Domain.csproj" />
+  <Project Path="GameView.csproj" />
+  <Project Path="Tests.csproj" />
+</Solution>

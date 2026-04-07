@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Default Local Group
+  m_GUID: 9507dc3890b5a744e94d871c6effec1a
+  m_SerializeEntries:
+  - m_GUID: 0603727ea64a53b4198dd6b83900137d
+    m_Address: E01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53abc4a99858c2f4a91a9d405ab4567a
+    m_Address: Bullet_Fire
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b9cebd44c8085b4d97269b4da23028e
+    m_Address: TOWER_POISON
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cabc4c7c2ce80844a406c06e8c3b922
+    m_Address: TOWER_ICE
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8877d098237290d49a6f1e6c8d90df89
+    m_Address: TOWER_FIRE
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa549c255d9698c43bf6fab1a3a4d8e6
+    m_Address: TOWER_FIRE_AND_ICE
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d033ca622dfb07e498b2623abdba4b01
+    m_Address: TOWER_LIGHTNING
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e364804eaf31c59498351bf286e0e440
+    m_Address: TOWER_ROCK
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd0b19b179d4b394cabc1f7f3a0ebe96
+    m_Address: Bullet_Ice
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 7905e8c343b02284398a54ab3078fe2a, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 215d616e1573c334ebf7f3df0e154aef, type: 2}
+    - {fileID: 11400000, guid: 89cf4a7e5393eae4ea6005c89f4040a2, type: 2}
+    - {fileID: 11400000, guid: 75193751d23459d4497526065933a09b, type: 2}

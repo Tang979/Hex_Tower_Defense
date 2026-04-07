@@ -32,7 +32,12 @@
 *.DotSettings.user
 
 # Visual Studio cache directory
+<<<<<<< HEAD
 .vs/
+=======
+.vscode/
+.qodo/
+>>>>>>> dev
 
 # Gradle cache directory
 .gradle/
@@ -97,3 +102,8 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+<<<<<<< HEAD
+=======
+
+Assets/ThirdParty/Starfield Skybox/
+>>>>>>> dev

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64e5d255abd57d4cb12558cea6657a9, type: 3}
+  m_Name: TOWER_FIRE
+  m_EditorClassIdentifier: Assembly-CSharp::TowerOS
+  Id: TOWER_FIRE
+  towerName: Fire
+  towerPrefab: {fileID: 8495006388533710513, guid: 4fd22e290fb914e4c8960a6165c9e197, type: 3}
+  ghostPrefab: {fileID: 8495006388533710513, guid: 4fd22e290fb914e4c8960a6165c9e197, type: 3}
+  towerIcon: {fileID: -1172109102, guid: 72de1668aa36cfc449bbdc1522f8a4e7, type: 3}
+  bulletPrefab: {fileID: 8852795968302320845, guid: 53abc4a99858c2f4a91a9d405ab4567a, type: 3}

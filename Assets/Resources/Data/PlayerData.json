@@ -1,0 +1,7 @@
+{
+  "PlayerName": "Aetheric Master",
+  "Level": 5,
+  "Coins": 1500,
+  "UnlockedTowerIds": ["TOWER_FIRE", "TOWER_ICE", "TOWER_POISON", "TOWER_LIGHTNING", "TOWER_ROCK"],
+  "SelectedTowerIds": ["TOWER_FIRE", "TOWER_ICE", "TOWER_POISON", "TOWER_LIGHTNING", "TOWER_ROCK"]
+}

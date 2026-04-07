@@ -1,0 +1,22 @@
+{
+  "Name": "Map_01",
+  "StartCurrency": 100,
+  "BaseHealth": 20,
+  "Cells": [
+    [1, 1, 1, 1, 1, 1, 1],
+    [4, 1, 1, 1, 1, 1, 5],
+    [1, 1, 1, 1, 1, 1, 1]
+  ],
+
+  "Lanes": [
+    {
+      "LaneId": 0,
+
+      "Waves": [
+        {
+          "SpawnList": [{ "EnemyId": "E01", "Count": 3, "Interval": 1.8 }]
+        }
+      ]
+    }
+  ]
+}
