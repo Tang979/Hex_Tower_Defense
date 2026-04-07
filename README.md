@@ -6,9 +6,6 @@ A strategic tower defense game built with **Unity** featuring hexagonal grid-bas
 ![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-brightgreen)
 ![Language](https://img.shields.io/badge/Language-C%23%2010-blue)
 
-## 📥 Download Demo
-You can download the latest playable APK [HERE]([link-đến-bản-release-của-bạn](https://github.com/Tang979/Aetheric_Mobile/releases/tag/v1.0.0))
-
 ---
 
 ## 📋 Table of Contents
@@ -34,7 +31,8 @@ You can download the latest playable APK [HERE]([link-đến-bản-release-của
 3. Defeat enemy waves to earn currency
 4. Merge towers to unlock upgraded versions
 5. Survive and defeat the boss wave
-
+## 📥 Download Demo
+You can download the latest playable APK [HERE](https://github.com/Tang979/Aetheric_Mobile/releases/download/v1.0.0/HexTowerDefense.apk)
 ---
 
 ## ✨ Features
