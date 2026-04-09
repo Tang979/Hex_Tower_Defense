@@ -10,14 +10,14 @@ A strategic tower defense game built with **Unity** featuring hexagonal grid-bas
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Architecture](#project-architecture)
-- [Core Systems](#core-systems)
-- [Installation & Setup](#installation--setup)
-- [Development Guide](#development-guide)
-- [API Reference](#api-reference)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Architecture](#-project-architecture)
+- [Core Systems](#-core-systems)
+- [Installation & Setup](#-installation--setup)
+- [Development Guide](#-development-guide)
+- [API Reference](#-api-reference)
 
 ---
 
